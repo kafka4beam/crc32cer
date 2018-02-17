@@ -28,8 +28,9 @@
 
 #pragma once
 
+typedef unsigned int uint32_t;
+
 uint32_t crc32c(uint32_t crc, const void *buf, size_t len);
 
 void crc32c_global_init (void);
 
-int unittest_crc32c (void);

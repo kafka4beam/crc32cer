@@ -45,8 +45,6 @@
    1.1   1 Aug 2013  Correct comments on why three crc instructions in parallel
  */
 
-#include "rd.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -54,9 +52,7 @@
 #include <unistd.h>
 #endif
 
-#include "rdunittest.h"
 #include "rdendian.h"
-
 #include "crc32c.h"
 
 /* CRC-32C (iSCSI) polynomial in reversed bit order. */
@@ -385,54 +381,3 @@ void crc32c_global_init (void) {
                 crc32c_init_sw();
 }
 
-int unittest_crc32c (void) {
-        const char *buf =
-"  This software is provided 'as-is', without any express or implied\n"
-"  warranty.  In no event will the author be held liable for any damages\n"
-"  arising from the use of this software.\n"
-"\n"
-"  Permission is granted to anyone to use this software for any purpose,\n"
-"  including commercial applications, and to alter it and redistribute it\n"
-"  freely, subject to the following restrictions:\n"
-"\n"
-"  1. The origin of this software must not be misrepresented; you must not\n"
-"     claim that you wrote the original software. If you use this software\n"
-"     in a product, an acknowledgment in the product documentation would be\n"
-"     appreciated but is not required.\n"
-"  2. Altered source versions must be plainly marked as such, and must not be\n"
-"     misrepresented as being the original software.\n"
-"  3. This notice may not be removed or altered from any source distribution.";
-        const uint32_t expected_crc = 0x7dcde113;
-        uint32_t crc;
-        const char *how;
-
-        crc32c_global_init();
-
-#if WITH_CRC32C_HW
-        if (sse42)
-                how = "hardware (SSE42)";
-        else
-                how = "software (SSE42 supported in build but not at runtime)";
-#else
-        how = "software";
-#endif
-        RD_UT_SAY("Calculate CRC32C using %s", how);
-
-        crc = crc32c(0, buf, strlen(buf));
-        RD_UT_ASSERT(crc == expected_crc,
-                     "Calculated CRC (%s) 0x%"PRIx32
-                     " not matching expected CRC 0x%"PRIx32,
-                     how, crc, expected_crc);
-
-        /* Verify software version too, regardless of which
-         * version was used above. */
-        crc32c_init_sw();
-        RD_UT_SAY("Calculate CRC32C using software");
-        crc = crc32c_sw(0, buf, strlen(buf));
-        RD_UT_ASSERT(crc == expected_crc,
-                     "Calculated CRC (software) 0x%"PRIx32
-                     " not matching expected CRC 0x%"PRIx32,
-                     crc, expected_crc);
-
-        RD_UT_PASS();
-}
