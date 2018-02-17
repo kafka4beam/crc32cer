@@ -26,3 +26,8 @@ staging-docs
 tmp
 stats*.json
 test_report*.json
+*.d
+ebin/
+env.mk
+rebar.lock
+.erlang.mk
