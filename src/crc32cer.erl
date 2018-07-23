@@ -24,19 +24,24 @@ nif(_Acc, _IoData) ->
 
 -spec so_path() -> string().
 so_path() ->
-  PrivDir =
-    case code:priv_dir(?APPLICATION) of
-      {error, bad_name} ->
-        {ok, Cwd} = file:get_cwd(),
-        Priv = filename:join([Cwd, "..", "priv"]),
-        case filelib:is_dir(Priv) of
-          true  -> Priv;
-          false -> filename:join(Cwd, "priv")
-        end;
-      Dir ->
-        Dir
-    end,
-  filename:join([PrivDir, "crc32cer"]).
+  filename:join([get_nif_bin_dir(), "crc32cer"]).
+
+get_nif_bin_dir() ->
+  {ok, Cwd} = file:get_cwd(),
+  get_nif_bin_dir(
+    [ code:priv_dir(?APPLICATION)
+    , filename:join([Cwd, "..", "priv"])
+    , filename:join(Cwd, "priv")
+    , os:getenv("NIF_BIN_DIR")
+    ]).
+
+get_nif_bin_dir([]) -> erlang:error(crc32cer_nif_not_found);
+get_nif_bin_dir([false | Rest]) -> get_nif_bin_dir(Rest);
+get_nif_bin_dir([Dir | Rest]) ->
+  case filelib:wildcard(filename:join([Dir, "crc32cer.*"])) of
+    [] -> get_nif_bin_dir(Rest);
+    [_ | _] -> Dir
+  end.
 
 -ifdef(TEST).
 
