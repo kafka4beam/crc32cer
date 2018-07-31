@@ -15,6 +15,8 @@ ifeq ($(shell uname -s),Darwin)
 	CFLAGS += -O3 -std=c99 -arch x86_64 -finline-functions -Wall -Wmissing-prototypes
 	CXXFLAGS += -O3 -arch x86_64 -finline-functions -Wall
 	LDFLAGS += -arch x86_64 -flat_namespace -undefined suppress
+else ifeq ($(shell uname -s),Linux)
+	CFLAGS += -O3 -std=gnu99 -finline-functions -Wall -Wmissing-prototypes
 endif
 
 include erlang.mk
