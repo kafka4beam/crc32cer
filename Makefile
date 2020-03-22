@@ -1,12 +1,15 @@
+.PHONY: all clean compile tests hex-publish
+
 all: compile
 
 compile:
-	@rebar compile
+	@rebar3 compile
 
 tests:
-	@rebar eunit
+	@rebar3 eunit -v
 
 clean:
-	@rebar clean
+	@rebar3 clean
 
-.PHONY: clean compile tests
+hex-publish: distclean
+	rebar3 hex publish

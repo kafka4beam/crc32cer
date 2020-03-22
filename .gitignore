@@ -33,3 +33,4 @@ rebar.lock
 .erlang.mk
 _build/
 erlang.mk
+TEST-file*.xml
