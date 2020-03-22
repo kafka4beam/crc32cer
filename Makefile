@@ -11,5 +11,5 @@ tests:
 clean:
 	@rebar3 clean
 
-hex-publish: distclean
+hex-publish: clean
 	rebar3 hex publish
