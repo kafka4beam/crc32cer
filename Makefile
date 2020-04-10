@@ -12,4 +12,4 @@ clean:
 	@rebar3 clean
 
 hex-publish: clean
-	rebar3 hex publish
+	@rebar3 hex publish
