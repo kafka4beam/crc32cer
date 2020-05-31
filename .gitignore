@@ -34,3 +34,4 @@ rebar.lock
 _build/
 erlang.mk
 TEST-file*.xml
+.tool-versions
