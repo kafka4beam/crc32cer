@@ -10,7 +10,8 @@ static ERL_NIF_TERM crc32c_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
   }
 
   ErlNifBinary bin;
-  if(!enif_inspect_iolist_as_binary(env, argv[1], &bin)) {
+  if(!(enif_inspect_binary(env, argv[1], &bin) ||
+       enif_inspect_iolist_as_binary(env, argv[1], &bin))) {
     return enif_make_badarg(env);
   }
 
