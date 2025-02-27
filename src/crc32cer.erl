@@ -56,6 +56,14 @@ basic_test_() ->
      end}
   ].
 
+perf_test() ->
+    Data = binary:copy(list_to_binary(license_txt()), 400),
+    {Elapsed, ok} = timer:tc(fun() ->
+                                     lists:foreach(fun(_) -> crc32cer:nif(Data) end, lists:seq(1, 1000))
+                             end, millisecond),
+    io:format("Size: ~p, Elapsed time: ~p ms~n", [byte_size(Data), Elapsed]),
+    ?assert(Elapsed < 100).
+
 license_crc() ->
   16#7dcde113.
 
