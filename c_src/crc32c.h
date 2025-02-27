@@ -28,6 +28,11 @@
 
 #pragma once
 
+#if defined(__x86_64__)
+#define WITH_CRC32C_HW 1
+#define RD_INLINE inline
+#endif
+
 typedef unsigned int uint32_t;
 
 uint32_t crc32c(uint32_t crc, const void *buf, size_t len);
