@@ -1,7 +1,11 @@
 
 -module(crc32cer).
 
--export([nif/1, nif/2]).
+-export([nif/1,
+         nif/2,
+         nif_d/1,
+         nif_d/2
+        ]).
 
 -on_load(init/0).
 
@@ -18,9 +22,17 @@ nif(IoData) ->
 nif(_Acc, _IoData) ->
   erlang:nif_error({crc32cer_nif_not_loaded, so_path()}).
 
+-spec nif_d(iodata()) -> non_neg_integer().
+nif_d(IoData) ->
+  nif(0, IoData).
+
+-spec nif_d(integer(), iodata()) -> non_neg_integer().
+nif_d(_Acc, _IoData) ->
+  erlang:nif_error({crc32cer_nif_not_loaded, so_path()}).
+
 -spec so_path() -> string().
 so_path() ->
-  filename:join([get_nif_bin_dir(), "crc32cer_nif"]).
+  filename:join([get_nif_bin_dir(), "libcrc32cer_nif"]).
 
 get_nif_bin_dir() ->
   {ok, Cwd} = file:get_cwd(),
@@ -34,7 +46,7 @@ get_nif_bin_dir() ->
 get_nif_bin_dir([]) -> erlang:error(crc32cer_nif_not_found);
 get_nif_bin_dir([false | Rest]) -> get_nif_bin_dir(Rest);
 get_nif_bin_dir([Dir | Rest]) ->
-  case filelib:wildcard(filename:join([Dir, "crc32cer_nif*"])) of
+  case filelib:wildcard(filename:join([Dir, "libcrc32cer_nif*"])) of
     [] -> get_nif_bin_dir(Rest);
     [_ | _] -> Dir
   end.
