@@ -39,7 +39,7 @@ ExternalProject_Add(google-crc32c
          SOURCE_DIR "${CMAKE_BINARY_DIR}/external/crc32c"
          CMAKE_ARGS -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCRC32C_INSTALL=ON -DCRC32C_BUILD_TESTS=OFF -DCRC32C_BUILD_BENCHMARKS=OFF -DCRC32C_USE_GLOG=0
          BUILD_COMMAND ${CMAKE_COMMAND} --build .
-         PATCH_COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/crc32c_cmake.patch || true
+         PATCH_COMMAND patch -N -p1 < ${PROJECT_SOURCE_DIR}/crc32c_cmake.patch || true
          INSTALL_COMMAND ""
          )
 
