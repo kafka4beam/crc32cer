@@ -7,8 +7,8 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
-    name: Test on OTP ${{matrix.otp}} and ${{matrix.os}}
+  linux:
+    name: Test on Linux: OTP ${{matrix.otp}} and ${{matrix.os}}
 
     strategy:
       matrix:
@@ -33,3 +33,43 @@ jobs:
 
     - name: Run tests
       run: make tests
+
+  mac:
+    name: Test on Mac: ${{matrix.otp}} and ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-14
+          - macos-15
+        rebar3:
+          - '3.23.0'
+        otp:
+          - '27'
+          - '26'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Homebrew cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew/
+            ~/Library/Caches/Homebrew/downloads/
+          key: brew-${{ matrix.os }}-${{ matrix.otp  }}
+
+      - name: prepare
+        run: |
+          export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
+          brew install erlang@${{ matrix.otp }}
+          echo "$(brew --prefix erlang@${{ matrix.otp }})/bin" >> $GITHUB_PATH
+
+      - name: build
+        run: |
+          wget https://github.com/erlang/rebar3/releases/download/${{ matrix.rebar3 }}/rebar3
+          sudo mv rebar3 /usr/local/bin/ && sudo chmod +x /usr/local/bin/rebar3
+          erl -eval 'erlang:display(erlang:system_info(system_version)),halt()'
+          # run sudo for getting coredump
+          make tests
