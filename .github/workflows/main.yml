@@ -8,7 +8,7 @@ on:
 
 jobs:
   linux:
-    name: Test on Linux: OTP ${{matrix.otp}} and ${{matrix.os}}
+    name: Test on Linux OTP ${{matrix.otp}} and ${{matrix.os}}
 
     strategy:
       matrix:
@@ -35,7 +35,7 @@ jobs:
       run: make tests
 
   mac:
-    name: Test on Mac: ${{matrix.otp}} and ${{matrix.os}}
+    name: Test on Mac ${{matrix.otp}} and ${{matrix.os}}
     strategy:
       fail-fast: false
       matrix:

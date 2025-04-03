@@ -10,6 +10,8 @@ set(SOURCES
 SET(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 SET(Erlang_EI_INCLUDE_DIRS   ${Erlang_OTP_LIB_DIR}/${Erlang_EI_DIR}/include)
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/priv/)
+# OTP limitation
+SET(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 
 # For cerl picking up the OTP_ROOT
 if (DEFINED ENV{Erlang_OTP_ROOT_DIR})
@@ -26,11 +28,6 @@ target_include_directories(crc32cer_nif PRIVATE ${Erlang_OTP_ROOT_DIR}/usr/inclu
 
 set(CMAKE_CXX_EXTENSIONS ON)
 set_property(GLOBAL  PROPERTY CXX_STANDARD 11)
-
-
-# Correctly set the installation directory
-#set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
-#set(CMAKE_INSTALL_LIBDIR priv)
 
 include(ExternalProject)
 ExternalProject_Add(google-crc32c
@@ -54,8 +51,11 @@ add_library(crc32c SHARED IMPORTED)
 add_dependencies(crc32cer_nif google-crc32c)
 set_property(TARGET crc32c PROPERTY IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/external/src/google-crc32c-build/libcrc32c.a)
 
-
-target_link_libraries(crc32cer_nif crc32c)
+if (CMAKE_SYSTEM_NAME MATCHES Darwin)
+  target_link_libraries(crc32cer_nif PRIVATE crc32c c++ "-Wl,-undefined,dynamic_lookup")
+else()
+ target_link_libraries(crc32cer_nif crc32c)
+endif()
 
 install(TARGETS crc32cer_nif LIBRARY DESTINATION ${PROJECT_SOURCE_DIR}/priv/)
 
