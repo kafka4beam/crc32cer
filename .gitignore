@@ -35,3 +35,4 @@ _build/
 erlang.mk
 TEST-file*.xml
 .tool-versions
+c_build
