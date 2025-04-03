@@ -2,18 +2,20 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-basic_test_() ->
-  [ {"0", fun() -> ?assertEqual(0, nif(<<>>)) end}
-  , {"1-9", fun() -> ?assertEqual(16#e3069283, nif("123456789")) end}
-  , {"a", fun() -> ?assertEqual(16#c1d04330, nif("a")) end}
-  , {"license", fun() -> ?assertEqual(license_crc(), nif(license_txt())) end}
+basic_nif_test_() ->
+  [basic(Fun) || Fun <- [nif, nif_d]].
+
+basic(Fun) ->
+  [ {"0", fun() -> ?assertEqual(0, crc32cer:Fun(<<>>)) end}
+  , {"1-9", fun() -> ?assertEqual(16#e3069283, crc32cer:Fun("123456789")) end}
+  , {"a", fun() -> ?assertEqual(16#c1d04330, crc32cer:Fun("a")) end}
+  , {"license", fun() -> ?assertEqual(license_crc(), crc32cer:Fun(license_txt())) end}
   , {"acc",
      fun() ->
          Bytes = license_txt(),
-         Crc = lists:foldl(fun(B, Acc) -> nif(Acc, [B]) end, 0, Bytes),
+         Crc = lists:foldl(fun(B, Acc) -> crc32cer:Fun(Acc, [B]) end, 0, Bytes),
          ?assertEqual(license_crc(), Crc)
-     end}
-  ].
+     end}].
 
 perf_test() ->
     Data = binary:copy(list_to_binary(license_txt()), 400),
@@ -49,8 +51,3 @@ license_txt() ->
 "     misrepresented as being the original software.\n"
 "  3. This notice may not be removed or altered from any source distribution.".
 
-nif(Data) ->
-  crc32cer:nif(Data).
-
-nif(Acc, Data) ->
-  crc32cer:nif(Acc, Data).
