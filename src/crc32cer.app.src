@@ -10,7 +10,6 @@
   , {links,[{"Github","https://github.com/kafka4beam/crc32cer.git"}]}
   , {build_tools,["rebar3"]}
   , {files,["c_src/*.h","c_src/*.c", "rebar.config",
-            "src", "Makefile", "CMakeLists.txt", "crc32cer_cmake.path"]}
+            "src", "Makefile", "CMakeLists.txt", "crc32c_cmake.patch"]}
   ]
 }.
-
