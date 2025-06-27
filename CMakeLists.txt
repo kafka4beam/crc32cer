@@ -34,7 +34,7 @@ ExternalProject_Add(google-crc32c
          GIT_REPOSITORY "https://github.com/google/crc32c.git"
          GIT_TAG "1.1.2"
          GIT_SHALLOW 1
-         GIT_SUBMODULES_SHALLOW 1
+         GIT_SUBMODULES ""
          PREFIX "${CMAKE_BINARY_DIR}/external"
          SOURCE_DIR "${CMAKE_BINARY_DIR}/external/crc32c"
          CMAKE_ARGS -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCRC32C_INSTALL=ON -DCRC32C_BUILD_TESTS=OFF -DCRC32C_BUILD_BENCHMARKS=OFF -DCRC32C_USE_GLOG=0
