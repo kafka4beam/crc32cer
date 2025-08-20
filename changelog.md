@@ -1,3 +1,7 @@
+# 1.0.4
+
+- Fix link error on Enterprise Linux (centos/rockylinux/redhat).
+
 # 1.0.3
 
 - Improve build. Skip unnecessary submodule clones.
