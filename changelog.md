@@ -1,3 +1,7 @@
+# 1.0.5
+
+- Add dummy `port_spec` to rebar.config
+
 # 1.0.4
 
 - Fix link error on Enterprise Linux (centos/rockylinux/redhat).
