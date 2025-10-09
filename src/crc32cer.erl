@@ -4,7 +4,9 @@
 -export([nif/1,
          nif/2,
          nif_d/1,
-         nif_d/2
+         nif_d/2,
+         nif_iolist_d/1,
+         nif_iolist_d/2
         ]).
 
 -on_load(init/0).
@@ -19,15 +21,23 @@ nif(IoData) ->
   nif(0, IoData).
 
 -spec nif(integer(), iodata()) -> non_neg_integer().
-nif(_Acc, _IoData) ->
-  erlang:nif_error({crc32cer_nif_not_loaded, so_path()}).
+nif(Acc, IoData) ->
+  nif_d(Acc, IoData).
 
 -spec nif_d(iodata()) -> non_neg_integer().
 nif_d(IoData) ->
-  nif(0, IoData).
+  nif_d(0, IoData).
 
 -spec nif_d(integer(), iodata()) -> non_neg_integer().
 nif_d(_Acc, _IoData) ->
+  erlang:nif_error({crc32cer_nif_not_loaded, so_path()}).
+
+-spec nif_iolist_d(iodata()) -> non_neg_integer().
+nif_iolist_d(IoData) ->
+    nif_iolist_d(0, IoData).
+
+-spec nif_iolist_d(integer(), iodata()) -> non_neg_integer().
+nif_iolist_d(_Acc, _IoData) ->
   erlang:nif_error({crc32cer_nif_not_loaded, so_path()}).
 
 -spec so_path() -> string().
