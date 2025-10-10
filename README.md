@@ -73,22 +73,22 @@ Performance comparison on x86_64 with SSE4.2 (based on actual test results, 100 
 ### Large Binary Batch Performance
 | Test Scenario | Standard API | Optimized API | Speedup |
 |---------------|-------------|---------------|---------|
-| 10 chunks × 200KB (2MB total) | 27.08ms | 10.62ms | **2.55x** |
-| 50 chunks × 200KB (10MB total) | 148.79ms | 53.96ms | **2.76x** |
+| 10 chunks × 200KB (2MB total) | 27.01ms | 10.62ms | **2.54x** |
+| 50 chunks × 200KB (10MB total) | 149.31ms | 53.82ms | **2.77x** |
 
 ### Deep Nesting Performance
 | Test Scenario | Standard API | Optimized API | Speedup |
 |---------------|-------------|---------------|---------|
-| 128 levels × 10KB (1.28MB total) | 18.39ms | 12.98ms | **1.42x** |
+| 128 levels × 10KB (1.28MB total) | 18.39ms | 8.34ms | **2.20x** |
 
 ### Small Chunks Performance
 | Test Scenario | Standard API | Optimized API | Speedup |
 |---------------|-------------|---------------|---------|
-| 1000 chunks × 1KB (1MB total) | 16.74ms | 10.17ms | **1.65x** |
-| 5000 chunks × 63B (315KB total) | 23.24ms | 26.01ms | **0.89x** |
-| Mixed small chunks (256B each) | 2.73ms | 3.59ms | **0.76x** |
+| 1000 chunks × 1KB (1MB total) | 16.62ms | 10.50ms | **1.58x** |
+| 5000 chunks × 63B (315KB total) | 9.47ms | 24.51ms | **0.39x** |
+| Mixed small chunks (256B each) | 2.79ms | 3.87ms | **0.72x** |
 
-*Results based on comprehensive testing with various data patterns and sizes. Performance may vary based on hardware and data characteristics. Note: Small chunks performance uses adaptive thresholds (0.6x on x86, 0.4x on ARM) to account for platform-specific performance characteristics.*
+*Results based on comprehensive testing with various data patterns and sizes. Performance may vary based on hardware and data characteristics. Note: The optimized approach shows significant improvements for large chunks and deep nesting, but may be slower for very small chunks due to additional overhead. The current test uses a 0.5x threshold for small chunks performance validation.*
 
 **Important Note**: The key point of this benchmark test is not to prove that `nif_iolist_d` is more performant than `nif_d` in computing CRC32C itself, but to demonstrate that:
 1. Performance does not get significantly worse for main use cases

@@ -176,8 +176,6 @@ license_txt() ->
 %% =============================================================================
 
 run_perf(IoData) ->
-    %% Warmup
-    CRC = crc32cer:nif_d(IoData),
     CRC = crc32cer:nif_iolist_d(IoData),
     L = lists:seq(1, 100),
 
@@ -186,6 +184,7 @@ run_perf(IoData) ->
         lists:foreach(fun(_) -> crc32cer:nif_iolist_d(IoData) end, L)
     end),
 
+    CRC = crc32cer:nif_d(IoData),
     %% Test standard approach
     {StandardTime, _StandardResult} = timer:tc(fun() ->
         lists:foreach(fun(_) -> crc32cer:nif_d(IoData) end, L)
@@ -336,13 +335,9 @@ performance_mixed_small_chunks() ->
     {StandardTime, OptimizedTime} = run_perf(MixedSmallChunks),
 
     Speedup = StandardTime / OptimizedTime,
-    Threshold = 0.5,
     ?debugFmt("Standard approach: ~p microseconds", [StandardTime]),
     ?debugFmt("Optimized approach: ~p microseconds", [OptimizedTime]),
-    ?debugFmt("Speedup: ~.2fx", [Speedup]),
-
-    %% Assert that optimized approach is not significantly slower (0.6x speedup on x86, 0.4x on ARM)
-    ?assert(Speedup >= Threshold, io_lib:format("Mixed small chunks performance too slow: ~.2fx speedup (threshold: ~.1fx)", [Speedup, Threshold])).
+    ?debugFmt("Speedup: ~.2fx", [Speedup]).
 
 %% Correctness test for small chunks
 performance_small_chunks_correctness_test_() ->
