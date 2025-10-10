@@ -1,3 +1,7 @@
+# 1.1.0
+
+- Add `nif_iolist` and `nif_iolist_d` APIs for iolist with large binary chunks.
+
 # 1.0.5
 
 - Add dummy `port_spec` to rebar.config
