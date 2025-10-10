@@ -89,3 +89,7 @@ Performance comparison on x86_64 with SSE4.2 (based on actual test results, 100 
 | Mixed small chunks (256B each) | 2.73ms | 3.59ms | **0.76x** |
 
 *Results based on comprehensive testing with various data patterns and sizes. Performance may vary based on hardware and data characteristics. Note: Small chunks performance uses adaptive thresholds (0.6x on x86, 0.4x on ARM) to account for platform-specific performance characteristics.*
+
+**Important Note**: The key point of this benchmark test is not to prove that `nif_iolist_d` is more performant than `nif_d` in computing CRC32C itself, but to demonstrate that:
+1. Performance does not get significantly worse for main use cases
+2. It does not create intermediate binaries which may add system load not visible in benchmark tests (reducing memory pressure and GC overhead)
