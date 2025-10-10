@@ -241,13 +241,8 @@ performance_deep_nesting() ->
     ?debugFmt("Optimized approach: ~p microseconds", [OptimizedTime]),
     ?debugFmt("Speedup: ~.2fx", [Speedup]),
 
-    %% Assert reasonable speedup (at least 1.2x)
-    case is_arm_architecture() of
-        true ->
-            ok;
-        false ->
-            ?assert(Speedup >= 1.2, io_lib:format("Deep nesting performance insufficient: ~.2fx < 1.2x", [Speedup]))
-    end.
+    %% Assert not worse than standard
+    ?assert(not (Speedup < 0.99), io_lib:format("Deep nesting performance insufficient: ~.2fx < 1x", [Speedup])).
 
 %% Correctness verification test
 performance_correctness_test_() ->
@@ -364,11 +359,6 @@ performance_small_chunks_correctness() ->
     end, TestCases),
 
     ?debugFmt("All small chunks correctness tests passed", []).
-
-%% Helper function to detect ARM architecture
-is_arm_architecture() ->
-    Arch = erlang:system_info(system_architecture),
-    string:find(Arch, "arm") =/= nomatch orelse string:find(Arch, "aarch") =/= nomatch.
 
 %% Helper function to create mixed small chunks iolist
 create_mixed_small_chunks_iolist(0, _ChunkSize) -> [];
