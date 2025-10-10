@@ -161,6 +161,7 @@ static ErlNifFunc nif_funs[] =
 {
   {"nif", 2, crc32c_nif, 0},
   {"nif_d", 2, crc32c_nif, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+  {"nif_iolist", 2, crc32c_nif_iolist, 0},
   {"nif_iolist_d", 2, crc32c_nif_iolist, ERL_NIF_DIRTY_JOB_CPU_BOUND}
 };
 

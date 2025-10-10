@@ -46,6 +46,8 @@
          nif/2,
          nif_d/1,
          nif_d/2,
+         nif_iolist/1,
+         nif_iolist/2,
          nif_iolist_d/1,
          nif_iolist_d/2
         ]).
@@ -156,8 +158,64 @@ nif_d(_Acc, _IoData) ->
 %% @doc Calculate CRC32C checksum of iodata with initial CRC of 0 (iolist optimized).
 %%
 %% This function is identical to `nif/1` but uses an iolist-optimized approach
-%% that can be significantly faster for batches of large binary chunks. It runs as a
-%% dirty scheduler job to avoid blocking the scheduler.
+%% that can be significantly faster for batches of large binary chunks.
+%%
+%% == Examples ==
+%% ```
+%% %% Batch of large binary chunks
+%% LargeChunks = [binary:copy(<<"chunk">>, 100000) || _ <- lists:seq(1, 10)],
+%% Crc = crc32cer:nif_iolist(LargeChunks),
+%%
+%% %% Mixed iolist with large binaries
+%% IoList = [<<"header">>, binary:copy(<<"data">>, 50000), <<"footer">>],
+%% Crc2 = crc32cer:nif_iolist(IoList),
+%% ```
+%%
+%% @param IoData The iodata to calculate CRC32C for
+%% @returns The CRC32C checksum as a non-negative integer
+-spec nif_iolist(iodata()) -> non_neg_integer().
+nif_iolist(IoData) ->
+    nif_iolist(0, IoData).
+
+%% @doc Calculate CRC32C checksum optimized for batches of large binary chunks.
+%%
+%% This function uses a stack-based approach optimized for processing batches of
+%% large binary chunks without creating temporary binaries. It can be up to 28x
+%% faster than the standard approach for batches of large data (>100KB per chunk).
+%%
+%% == Performance Characteristics ==
+%%
+%% <ul>
+%% <li><b>Best for</b>: Batches of large binary chunks, memory-constrained environments</li>
+%% <li><b>Performance</b>: Up to 28x faster than standard approach for batches of large data</li>
+%% <li><b>Memory</b>: No temporary binary creation, fixed 64-entry stack</li>
+%% <li><b>Fallback</b>: Automatically falls back to VM approach for deep nesting (>64 levels)</li>
+%% </ul>
+%%
+%% == Examples ==
+%% ```
+%% %% Batch of large binary chunks
+%% LargeChunks = [binary:copy(<<"chunk">>, 100000) || _ <- lists:seq(1, 10)],
+%% Crc1 = crc32cer:nif_iolist(0, LargeChunks),
+%%
+%% %% Mixed iolist with large binaries
+%% IoList = [<<"header">>, binary:copy(<<"data">>, 50000), <<"footer">>],
+%% Crc2 = crc32cer:nif_iolist(0, IoList),
+%%
+%% %% With custom initial CRC
+%% Crc3 = crc32cer:nif_iolist(16#12345678, LargeChunks),
+%% ```
+%%
+%% @param Acc The initial CRC value (0 for fresh calculation)
+%% @param IoData The iodata to calculate CRC32C for
+%% @returns The CRC32C checksum as a non-negative integer
+-spec nif_iolist(integer(), iodata()) -> non_neg_integer().
+nif_iolist(_Acc, _IoData) ->
+  erlang:nif_error({crc32cer_nif_not_loaded, so_path()}).
+
+%% @doc Calculate CRC32C checksum of iodata with initial CRC of 0 (iolist optimized, dirty scheduler).
+%%
+%% This function is identical to `nif_iolist/1` but runs as a dirty scheduler job.
 %%
 %% == Examples ==
 %% ```
