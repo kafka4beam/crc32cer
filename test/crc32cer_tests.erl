@@ -59,6 +59,15 @@ iolist_basic(Fun) ->
          Actual = crc32cer:Fun(16#12345678, IoList),
          ?assertEqual(Expected, Actual)
      end}
+  , {"deep_nested_iolist",
+     fun() ->
+         Last = lists:foldl(fun(X, Acc) -> [ X | [Acc]] end, [], lists:seq(1,128)),
+         %Last = [ integer_to_binary(X) || X <- lists:seq(1,128)],
+         IoList = [<<"part1">>, [<<"part2">>, " ", <<"part3">>], <<"part4">>, Last],
+         Expected = crc32cer:nif(IoList),
+         Actual = crc32cer:nif_iolist_d(IoList),
+         ?assertEqual(Expected, Actual)
+     end}
 ].
 
 perf_test() ->
@@ -172,15 +181,16 @@ run_perf(IoData) ->
     CRC = crc32cer:nif_iolist_d(IoData),
     L = lists:seq(1, 100),
 
+    %% Test optimized approach
+    {OptimizedTime, _OptimizedResult} = timer:tc(fun() ->
+        lists:foreach(fun(_) -> crc32cer:nif_iolist_d(IoData) end, L)
+    end),
+
     %% Test standard approach
     {StandardTime, _StandardResult} = timer:tc(fun() ->
         lists:foreach(fun(_) -> crc32cer:nif_d(IoData) end, L)
     end),
 
-    %% Test optimized approach
-    {OptimizedTime, _OptimizedResult} = timer:tc(fun() ->
-        lists:foreach(fun(_) -> crc32cer:nif_iolist_d(IoData) end, L)
-    end),
     {StandardTime, OptimizedTime}.
 
 %% Performance test for very large binary batches
