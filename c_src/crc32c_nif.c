@@ -57,9 +57,12 @@ static int crc32c_iolist_stack_based(ErlNifEnv* env, ERL_NIF_TERM term, uint32_t
     } else if (enif_is_list(env, current)) {
       ERL_NIF_TERM head, tail;
       if (enif_get_list_cell(env, current, &head, &tail)) {
-        // Push tail onto stack for later processing
+        // Push tail onto stack for later processing (only if not empty)
         if (stack_top < MAX_STACK_SIZE) {
-          stack[stack_top++] = tail;
+          // Only push non-empty lists onto the stack
+          if (!enif_is_empty_list(env, tail)) {
+            stack[stack_top++] = tail;
+          }
           // Process head immediately
           current = head;
         } else {
