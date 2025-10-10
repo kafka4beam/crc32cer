@@ -9,6 +9,22 @@
 #define MAX_STACK_SIZE 64
 
 
+// Extract and validate a number as a byte for CRC calculation
+// Returns 0 on success, 1 on badarg
+// CRC value is returned through the crc_ptr parameter
+static int process_number_as_byte(ErlNifEnv* env, ERL_NIF_TERM term, uint32_t current_crc, uint32_t* crc_ptr) {
+  int signed_code;
+  if (enif_get_int(env, term, &signed_code)) {
+    if (signed_code < 0 || signed_code > 255) {
+      return 1; // badarg - number out of range
+    }
+    uint8_t byte = (uint8_t)signed_code;
+    *crc_ptr = crc32c_extend(current_crc, &byte, 1);
+    return 0;
+  }
+  return 1; // badarg - invalid number
+}
+
 // Stack-based iolist processing with error handling
 // Returns 0 on success, 1 on badarg
 // CRC value is returned through the crc_ptr parameter
@@ -48,12 +64,19 @@ static int crc32c_iolist_stack_based(ErlNifEnv* env, ERL_NIF_TERM term, uint32_t
           current = head;
         } else {
           // Stack overflow - fall back to VM approach for head
-          ErlNifBinary bin;
-          if (enif_inspect_iolist_as_binary(env, head, &bin)) {
-            crc = crc32c_extend(crc, bin.data, bin.size);
+          if (enif_is_number(env, head)) {
+            // Handle integers (character codes in strings)
+            if (process_number_as_byte(env, head, crc, &crc) != 0) {
+              return 1; // badarg
+            }
           } else {
-            // Invalid data in head
-            return 1; // badarg
+            ErlNifBinary bin;
+            if (enif_inspect_iolist_as_binary(env, head, &bin)) {
+              crc = crc32c_extend(crc, bin.data, bin.size);
+            } else {
+              // Invalid data in head
+              return 1; // badarg
+            }
           }
           current = tail;
         }
@@ -62,16 +85,8 @@ static int crc32c_iolist_stack_based(ErlNifEnv* env, ERL_NIF_TERM term, uint32_t
       // Empty list - continue with stack
     } else if (enif_is_number(env, current)) {
       // Handle integers (character codes in strings)
-      // Only accept numbers in the valid byte range (0-255)
-      int signed_code;
-      if (enif_get_int(env, current, &signed_code)) {
-        if (signed_code < 0 || signed_code > 255) {
-          return 1; // badarg - number out of range
-        }
-        uint8_t byte = (uint8_t)signed_code;
-        crc = crc32c_extend(crc, &byte, 1);
-      } else {
-        return 1; // badarg - invalid number
+      if (process_number_as_byte(env, current, crc, &crc) != 0) {
+        return 1; // badarg
       }
     } else {
       // Invalid data encountered during traversal
