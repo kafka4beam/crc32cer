@@ -66,30 +66,31 @@ Optimized for batches of large binary chunks with custom initial CRC.
 
 Licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
 
-## 📊 Benchmarks for `nif_iolist_d`
+## 📊 Benchmarks for `nif_iolist` vs `nif`
 
-Performance comparison on x86_64 with SSE4.2 (based on actual test results, 100 iterations per scenario):
+Performance comparison on x86_64 with SSE4.2 (based on 10-run average test results, 100 iterations per scenario):
 
 ### Large Binary Batch Performance
-| Test Scenario | Standard API | Optimized API | Speedup |
-|---------------|-------------|---------------|---------|
-| 10 chunks × 200KB (2MB total) | 27.01ms | 10.62ms | **2.54x** |
-| 50 chunks × 200KB (10MB total) | 149.31ms | 53.82ms | **2.77x** |
+| Test Scenario | Standard (nif) | Optimized (nif_iolist) | Speedup | Winner |
+|---------------|----------------|------------------------|---------|---------|
+| 10 chunks × 200KB (2MB total) | 25.43 ± 1.06ms | 9.91 ± 0.02ms | **2.57x** | nif_iolist |
+| 50 chunks × 200KB (10MB total) | 141.56 ± 2.29ms | 51.10 ± 2.95ms | **2.78x** | nif_iolist |
 
 ### Deep Nesting Performance
-| Test Scenario | Standard API | Optimized API | Speedup |
-|---------------|-------------|---------------|---------|
-| 128 levels × 10KB (1.28MB total) | 18.39ms | 8.34ms | **2.20x** |
+| Test Scenario | Standard (nif) | Optimized (nif_iolist) | Speedup | Winner |
+|---------------|----------------|------------------------|---------|---------|
+| 128 levels × 10KB (1.28MB total) | 16.55 ± 0.26ms | 7.62 ± 0.03ms | **2.17x** | nif_iolist |
 
 ### Small Chunks Performance
-| Test Scenario | Standard API | Optimized API | Speedup |
-|---------------|-------------|---------------|---------|
-| 1000 chunks × 1KB (1MB total) | 16.62ms | 10.50ms | **1.58x** |
-| 5000 chunks × 63B (315KB total) | 9.47ms | 24.51ms | **0.39x** |
-| Mixed small chunks (256B each) | 2.79ms | 3.87ms | **0.72x** |
+| Test Scenario | Standard (nif) | Optimized (nif_iolist) | Speedup | Winner |
+|---------------|----------------|------------------------|---------|---------|
+| 1000 chunks × 1KB (1MB total) | 14.96 ± 0.08ms | 9.82 ± 0.02ms | **1.52x** | nif_iolist |
+| 5000 chunks × 63B (315KB total) | 14.55 ± 6.66ms | 25.08 ± 3.16ms | **0.59x** | **nif** |
+| Mixed small chunks (256B each) | 2.06 ± 0.37ms | 3.46 ± 0.48ms | **0.60x** | **nif** |
 
-*Results based on comprehensive testing with various data patterns and sizes. Performance may vary based on hardware and data characteristics. Note: The optimized approach shows significant improvements for large chunks and deep nesting, but may be slower for very small chunks due to additional overhead. The current test uses a 0.5x threshold for small chunks performance validation.*
+*Results based on 10-run average testing with various data patterns and sizes. Performance may vary based on hardware and data characteristics. Both approaches run on regular schedulers for fair comparison. The optimized approach shows significant improvements for large chunks and deep nesting, but may be slower for very small chunks due to additional overhead.*
 
-**Important Note**: The key point of this benchmark test is not to prove that `nif_iolist_d` is more performant than `nif_d` in computing CRC32C itself, but to demonstrate that:
+**Important Note**: The key point of this benchmark test is not to prove that `nif_iolist` is more performant than `nif` in computing CRC32C itself, but to demonstrate that:
 1. Performance does not get significantly worse for main use cases
 2. It does not create intermediate binaries which may add system load not visible in benchmark tests (reducing memory pressure and GC overhead)
+3. Both approaches run on regular schedulers for fair comparison (no dirty scheduler overhead)

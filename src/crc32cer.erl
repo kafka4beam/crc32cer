@@ -178,19 +178,20 @@ nif_d(_Acc, _IoData) ->
 nif_iolist(IoData) ->
     nif_iolist(0, IoData).
 
-%% @doc Calculate CRC32C checksum optimized for batches of large binary chunks.
+%% @doc Calculate CRC32C checksum optimized for iolist processing.
 %%
-%% This function uses a stack-based approach optimized for processing batches of
-%% large binary chunks without creating temporary binaries. It can be up to 28x
-%% faster than the standard approach for batches of large data (>100KB per chunk).
+%% This function uses a stack-based approach optimized for processing iolists
+%% without creating temporary binaries. Performance varies significantly based on
+%% data characteristics.
 %%
-%% == Performance Characteristics ==
+%% == Performance Characteristics (10-run average) ==
 %%
 %% <ul>
-%% <li><b>Best for</b>: Batches of large binary chunks, memory-constrained environments</li>
-%% <li><b>Performance</b>: Up to 28x faster than standard approach for batches of large data</li>
+%% <li><b>Best for</b>: Large chunks (2.8x faster), medium chunks (1.5x faster), deep nesting (2.2x faster)</li>
+%% <li><b>Worse for</b>: Very small chunks (0.59x slower), mixed small chunks (0.60x slower)</li>
 %% <li><b>Memory</b>: No temporary binary creation, fixed 64-entry stack</li>
 %% <li><b>Fallback</b>: Automatically falls back to VM approach for deep nesting (>64 levels)</li>
+%% <li><b>Use case</b>: Optimized for large binary chunks and deep iolist structures</li>
 %% </ul>
 %%
 %% == Examples ==
@@ -235,19 +236,21 @@ nif_iolist(_Acc, _IoData) ->
 nif_iolist_d(IoData) ->
     nif_iolist_d(0, IoData).
 
-%% @doc Calculate CRC32C checksum optimized for batches of large binary chunks (dirty scheduler job).
+%% @doc Calculate CRC32C checksum optimized for iolist processing (dirty scheduler job).
 %%
-%% This function uses a stack-based approach optimized for processing batches of
-%% large binary chunks without creating temporary binaries. It can be up to 28x
-%% faster than the standard approach for batches of large data (>100KB per chunk).
+%% This function uses a stack-based approach optimized for processing iolists
+%% without creating temporary binaries. Performance varies significantly based on
+%% data characteristics. Runs on a dirty scheduler to avoid blocking the main scheduler.
 %%
-%% == Performance Characteristics ==
+%% == Performance Characteristics (10-run average) ==
 %%
 %% <ul>
-%% <li><b>Best for</b>: Batches of large binary chunks, memory-constrained environments</li>
-%% <li><b>Performance</b>: Up to 28x faster than standard approach for batches of large data</li>
+%% <li><b>Best for</b>: Large chunks (2.8x faster), medium chunks (1.5x faster), deep nesting (2.2x faster)</li>
+%% <li><b>Worse for</b>: Very small chunks (0.59x slower), mixed small chunks (0.60x slower)</li>
 %% <li><b>Memory</b>: No temporary binary creation, fixed 64-entry stack</li>
 %% <li><b>Fallback</b>: Automatically falls back to VM approach for deep nesting (>64 levels)</li>
+%% <li><b>Use case</b>: Optimized for large binary chunks and deep iolist structures</li>
+%% <li><b>Scheduler</b>: Runs on dirty scheduler to avoid blocking main scheduler</li>
 %% </ul>
 %%
 %% == Examples ==

@@ -204,18 +204,18 @@ license_txt() ->
 %% =============================================================================
 
 run_perf(IoData) ->
-    CRC = crc32cer:nif_iolist_d(IoData),
+    CRC = crc32cer:nif_iolist(IoData),
     L = lists:seq(1, 100),
 
     %% Test optimized approach
     {OptimizedTime, _OptimizedResult} = timer:tc(fun() ->
-        lists:foreach(fun(_) -> crc32cer:nif_iolist_d(IoData) end, L)
+        lists:foreach(fun(_) -> crc32cer:nif_iolist(IoData) end, L)
     end),
 
-    CRC = crc32cer:nif_d(IoData),
+    CRC = crc32cer:nif(IoData),
     %% Test standard approach
     {StandardTime, _StandardResult} = timer:tc(fun() ->
-        lists:foreach(fun(_) -> crc32cer:nif_d(IoData) end, L)
+        lists:foreach(fun(_) -> crc32cer:nif(IoData) end, L)
     end),
 
     {StandardTime, OptimizedTime}.
