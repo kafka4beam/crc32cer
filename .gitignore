@@ -36,3 +36,5 @@ erlang.mk
 TEST-file*.xml
 .tool-versions
 c_build
+*.dump
+TEST-crc32cer_tests.xml

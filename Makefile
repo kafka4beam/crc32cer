@@ -23,3 +23,6 @@ clean:
 
 hex-publish: clean
 	@rebar3 hex publish --repo=hexpm
+
+fmt:
+	@rebar3 fmt -w
