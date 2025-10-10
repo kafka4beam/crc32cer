@@ -165,25 +165,34 @@ license_txt() ->
 %% Performance Tests
 %% =============================================================================
 
-%% Performance test for very large binary batches
-performance_large_batch_test_() ->
-    {"200KB x 10 Performance Test", fun performance_large_batch/0}.
+run_perf(IoData, Repeats) ->
+    %% Warmup
+    CRC = crc32cer:nif_d(IoData),
+    CRC = crc32cer:nif_iolist_d(IoData),
+    L = lists:seq(1, Repeats),
 
-performance_large_batch() ->
+    %% Test standard approach
+    {StandardTime, _StandardResult} = timer:tc(fun() ->
+        lists:foreach(fun(_) -> crc32cer:nif_d(IoData) end, L)
+    end),
+
+    %% Test optimized approach
+    {OptimizedTime, _OptimizedResult} = timer:tc(fun() ->
+        lists:foreach(fun(_) -> crc32cer:nif_iolist_d(IoData) end, L)
+    end),
+    {StandardTime, OptimizedTime}.
+
+%% Performance test for very large binary batches
+performance_200KB_x_10_chunks_test_() ->
+    {"200KB x 10 chunks", fun performance_200KB_x_10_chunks/0}.
+
+performance_200KB_x_10_chunks() ->
     ?debugFmt("=== 200KB x 10 Batch Performance Test ===", []),
 
     %% Generate large binary chunks
     LargeChunks = [binary:copy(<<"c">>, 200 * ?KB) || _ <- lists:seq(1, 10)],
 
-    %% Test standard approach
-    {StandardTime, _StandardResult} = timer:tc(fun() ->
-        lists:foreach(fun(_) -> crc32cer:nif_d(LargeChunks) end, lists:seq(1, 20))
-    end),
-
-    %% Test optimized approach
-    {OptimizedTime, _OptimizedResult} = timer:tc(fun() ->
-        lists:foreach(fun(_) -> crc32cer:nif_iolist_d(LargeChunks) end, lists:seq(1, 20))
-    end),
+    {StandardTime, OptimizedTime} = run_perf(LargeChunks, 10),
 
     Speedup = StandardTime / OptimizedTime,
     ?debugFmt("Standard approach: ~p microseconds", [StandardTime]),
@@ -193,22 +202,18 @@ performance_large_batch() ->
     %% Assert reasonable speedup (at least 1.5x)
     ?assert(Speedup >= 1.1, io_lib:format("200KB x 10 performance insufficient: ~.2fx < 1.1x", [Speedup])).
 
-%% Performance test for very large iolist
-performance_very_large_iolist_test_() ->
-    {"Very Large Iolist Performance Test", fun performance_very_large_iolist/0}.
 
-performance_very_large_iolist() ->
+%% Performance test for very large iolist
+performance_200KB_x_50_chunks_test_() ->
+    {"200KB x 50 chunks", fun performance_200KB_x_50_chunks/0}.
+
+performance_200KB_x_50_chunks() ->
     ?debugFmt("=== 200KB x 50 Iolist Performance Test ===", []),
 
     %% Create very large iolist
     VeryLargeIoList = [binary:copy(<<"v">>, 200 * ?KB) || _ <- lists:seq(1, 50)],
 
-    %% Test both approaches
-    {StandardTime, StandardResult} = timer:tc(fun() -> crc32cer:nif_d(VeryLargeIoList) end),
-    {OptimizedTime, OptimizedResult} = timer:tc(fun() -> crc32cer:nif_iolist_d(VeryLargeIoList) end),
-
-    %% Results should be identical
-    ?assertEqual(StandardResult, OptimizedResult),
+    {StandardTime, OptimizedTime} = run_perf(VeryLargeIoList, 10),
 
     Speedup = StandardTime / OptimizedTime,
     ?debugFmt("Standard approach: ~p microseconds", [StandardTime]),
@@ -228,17 +233,7 @@ performance_deep_nesting() ->
     %% Create deeply nested iolist with large data
     DeepLargeIoList = create_deep_large_iolist(128, 10 * ?KB),
 
-    %% Test both approaches
-    {StandardTime, StandardResult} = timer:tc(fun() ->
-        lists:foreach(fun(_) -> crc32cer:nif_d(DeepLargeIoList) end, lists:seq(1, 10))
-    end),
-
-    {OptimizedTime, OptimizedResult} = timer:tc(fun() ->
-        lists:foreach(fun(_) -> crc32cer:nif_iolist_d(DeepLargeIoList) end, lists:seq(1, 10))
-    end),
-
-    %% Results should be identical
-    ?assertEqual(StandardResult, OptimizedResult),
+    {StandardTime, OptimizedTime} = run_perf(DeepLargeIoList, 10),
 
     Speedup = StandardTime / OptimizedTime,
     ?debugFmt("Standard approach: ~p microseconds", [StandardTime]),
@@ -289,15 +284,7 @@ performance_small_chunks() ->
     %% Generate many small binary chunks (1KB each)
     SmallChunks = [binary:copy(<<"c">>, 1 * ?KB) || _ <- lists:seq(1, 1000)],
 
-    %% Test standard approach
-    {StandardTime, _StandardResult} = timer:tc(fun() ->
-        lists:foreach(fun(_) -> crc32cer:nif_d(SmallChunks) end, lists:seq(1, 10))
-    end),
-
-    %% Test optimized approach
-    {OptimizedTime, _OptimizedResult} = timer:tc(fun() ->
-        lists:foreach(fun(_) -> crc32cer:nif_iolist_d(SmallChunks) end, lists:seq(1, 10))
-    end),
+    {StandardTime, OptimizedTime} = run_perf(SmallChunks, 10),
 
     Speedup = StandardTime / OptimizedTime,
     Threshold = get_assertion_threshold(),
@@ -318,15 +305,7 @@ performance_tiny_chunks() ->
     %% Generate many tiny binary chunks (63 bytes each)
     TinyChunks = [binary:copy(<<"c">>, 63) || _ <- lists:seq(1, 5000)],
 
-    %% Test standard approach
-    {StandardTime, _StandardResult} = timer:tc(fun() ->
-        lists:foreach(fun(_) -> crc32cer:nif_d(TinyChunks) end, lists:seq(1, 5))
-    end),
-
-    %% Test optimized approach
-    {OptimizedTime, _OptimizedResult} = timer:tc(fun() ->
-        lists:foreach(fun(_) -> crc32cer:nif_iolist_d(TinyChunks) end, lists:seq(1, 5))
-    end),
+    {StandardTime, OptimizedTime} = run_perf(TinyChunks, 10),
 
     Speedup = StandardTime / OptimizedTime,
     Threshold = get_assertion_threshold(),
@@ -348,14 +327,7 @@ performance_mixed_small_chunks() ->
     MixedSmallChunks = create_mixed_small_chunks_iolist(100, 256),
 
     %% Test standard approach
-    {StandardTime, _StandardResult} = timer:tc(fun() ->
-        lists:foreach(fun(_) -> crc32cer:nif_d(MixedSmallChunks) end, lists:seq(1, 5))
-    end),
-
-    %% Test optimized approach
-    {OptimizedTime, _OptimizedResult} = timer:tc(fun() ->
-        lists:foreach(fun(_) -> crc32cer:nif_iolist_d(MixedSmallChunks) end, lists:seq(1, 5))
-    end),
+    {StandardTime, OptimizedTime} = run_perf(MixedSmallChunks, 10),
 
     Speedup = StandardTime / OptimizedTime,
     Threshold = get_assertion_threshold(),

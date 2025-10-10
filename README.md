@@ -68,24 +68,24 @@ Licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
 
 ## 📊 Benchmarks for `nif_iolist_d`
 
-Performance comparison on x86_64 with SSE4.2 (based on actual test results):
+Performance comparison on x86_64 with SSE4.2 (based on actual test results, 10 iterations per scenario):
 
 ### Large Binary Batch Performance
 | Test Scenario | Standard API | Optimized API | Speedup |
 |---------------|-------------|---------------|---------|
-| 10 chunks × 200KB (2MB total) | 5.52ms | 2.12ms | **2.60x** |
-| 50 chunks × 200KB (10MB total) | 9.43ms | 0.87ms | **10.89x** |
+| 10 chunks × 200KB (2MB total) | 2.70ms | 1.08ms | **2.49x** |
+| 50 chunks × 200KB (10MB total) | 16.42ms | 5.67ms | **2.90x** |
 
 ### Deep Nesting Performance
 | Test Scenario | Standard API | Optimized API | Speedup |
 |---------------|-------------|---------------|---------|
-| 128 levels × 10KB (1.28MB total) | 1.996ms | 1.378ms | **1.45x** |
+| 128 levels × 10KB (1.28MB total) | 1.86ms | 1.31ms | **1.42x** |
 
 ### Small Chunks Performance
 | Test Scenario | Standard API | Optimized API | Speedup |
 |---------------|-------------|---------------|---------|
-| 1000 chunks × 1KB (1MB total) | 1.83ms | 1.01ms | **1.81x** |
-| 5000 chunks × 63B (315KB total) | 1.64ms | 1.83ms | **0.90x** |
-| Mixed small chunks (256B each) | 0.23ms | 0.18ms | **1.22x** |
+| 1000 chunks × 1KB (1MB total) | 1.69ms | 1.01ms | **1.67x** |
+| 5000 chunks × 63B (315KB total) | 2.32ms | 3.43ms | **0.68x** |
+| Mixed small chunks (256B each) | 0.32ms | 0.42ms | **0.76x** |
 
-*Results based on comprehensive testing with various data patterns and sizes. Performance may vary based on hardware and data characteristics.*
+*Results based on comprehensive testing with various data patterns and sizes. Performance may vary based on hardware and data characteristics. Note: Small chunks performance uses adaptive thresholds (0.6x on x86, 0.4x on ARM) to account for platform-specific performance characteristics.*
