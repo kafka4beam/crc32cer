@@ -36,9 +36,12 @@ iolist_performance_comparison() ->
         {"Single large binary", [binary:copy(<<"data">>, 10000)]}
     ],
 
-    lists:foreach(fun({Name, Data}) ->
-        run_comparison(Name, Data, 100)
-    end, TestCases),
+    lists:foreach(
+        fun({Name, Data}) ->
+            run_comparison(Name, Data, 100)
+        end,
+        TestCases
+    ),
 
     ?debugFmt("=== Performance comparison completed ===", []).
 
@@ -53,23 +56,32 @@ run_comparison(Name, Data, Iterations) ->
     %% Verify correctness first
     CrcAccumulation = crc32cer_iolist_accumulation(Data),
     CrcOptimized = crc32cer:nif_iolist(Data),
-    ?assertEqual(CrcAccumulation, CrcOptimized,
-                io_lib:format("~s: CRC mismatch (~p != ~p)",
-                            [Name, CrcAccumulation, CrcOptimized])),
+    ?assertEqual(
+        CrcAccumulation,
+        CrcOptimized,
+        io_lib:format(
+            "~s: CRC mismatch (~p != ~p)",
+            [Name, CrcAccumulation, CrcOptimized]
+        )
+    ),
 
     %% Warm up
     warm_up(Data, 5),
 
     %% Benchmark accumulation approach
     {AccTime, _} = timer:tc(fun() ->
-        lists:foreach(fun(_) -> crc32cer_iolist_accumulation(Data) end,
-                     lists:seq(1, Iterations))
+        lists:foreach(
+            fun(_) -> crc32cer_iolist_accumulation(Data) end,
+            lists:seq(1, Iterations)
+        )
     end),
 
     %% Benchmark optimized approach
     {OptTime, _} = timer:tc(fun() ->
-        lists:foreach(fun(_) -> crc32cer:nif_iolist(Data) end,
-                     lists:seq(1, Iterations))
+        lists:foreach(
+            fun(_) -> crc32cer:nif_iolist(Data) end,
+            lists:seq(1, Iterations)
+        )
     end),
 
     %% Calculate statistics
@@ -89,23 +101,30 @@ crc32cer_iolist_accumulation(Int) when is_integer(Int) ->
 crc32cer_iolist_accumulation(Bin) when is_binary(Bin) ->
     crc32cer:nif(0, Bin);
 crc32cer_iolist_accumulation(L) when is_list(L) ->
-    lists:foldl(fun(I, Acc) ->
-        case I of
-            Int when is_integer(Int) ->
-                crc32cer:nif(Acc, [Int]);
-            Bin when is_binary(Bin) ->
-                crc32cer:nif(Acc, Bin);
-            _ ->
-                crc32cer:nif(Acc, I)
-        end
-    end, 0, L).
+    lists:foldl(
+        fun(I, Acc) ->
+            case I of
+                Int when is_integer(Int) ->
+                    crc32cer:nif(Acc, [Int]);
+                Bin when is_binary(Bin) ->
+                    crc32cer:nif(Acc, Bin);
+                _ ->
+                    crc32cer:nif(Acc, I)
+            end
+        end,
+        0,
+        L
+    ).
 
 %% @doc Warm up function to ensure consistent timing
 warm_up(Data, Count) ->
-    lists:foreach(fun(_) ->
-        crc32cer_iolist_accumulation(Data),
-        crc32cer:nif_iolist(Data)
-    end, lists:seq(1, Count)).
+    lists:foreach(
+        fun(_) ->
+            crc32cer_iolist_accumulation(Data),
+            crc32cer:nif_iolist(Data)
+        end,
+        lists:seq(1, Count)
+    ).
 
 %% =============================================================================
 %% Helper Functions
@@ -136,13 +155,21 @@ correctness_test() ->
         {[binary:copy(<<"x">>, 50) || _ <- lists:seq(1, 10)], "Many small chunks"}
     ],
 
-    lists:foreach(fun({TestData, Name}) ->
-        CrcAccumulation = crc32cer_iolist_accumulation(TestData),
-        CrcOptimized = crc32cer:nif_iolist(TestData),
-        ?assertEqual(CrcAccumulation, CrcOptimized,
-                    io_lib:format("~s: results don't match (~p != ~p)",
-                                 [Name, CrcAccumulation, CrcOptimized]))
-    end, TestCases),
+    lists:foreach(
+        fun({TestData, Name}) ->
+            CrcAccumulation = crc32cer_iolist_accumulation(TestData),
+            CrcOptimized = crc32cer:nif_iolist(TestData),
+            ?assertEqual(
+                CrcAccumulation,
+                CrcOptimized,
+                io_lib:format(
+                    "~s: results don't match (~p != ~p)",
+                    [Name, CrcAccumulation, CrcOptimized]
+                )
+            )
+        end,
+        TestCases
+    ),
 
     ?debugFmt("All correctness tests passed", []).
 
@@ -166,8 +193,11 @@ large_data_performance() ->
         {"Massive small chunks", [binary:copy(<<"a">>, 10) || _ <- lists:seq(1, 100)]}
     ],
 
-    lists:foreach(fun({Name, Data}) ->
-        run_comparison(Name, Data, 50)
-    end, TestCases),
+    lists:foreach(
+        fun({Name, Data}) ->
+            run_comparison(Name, Data, 50)
+        end,
+        TestCases
+    ),
 
     ?debugFmt("=== Large data performance test completed ===", []).

@@ -5,82 +5,81 @@
 -define(KB, 1024).
 
 basic_nif_test_() ->
-  [basic(Fun) || Fun <- [nif, nif_d]].
+    [basic(Fun) || Fun <- [nif, nif_d]].
 
 basic(Fun) ->
-  [ {"0", fun() -> ?assertEqual(0, crc32cer:Fun(<<>>)) end}
-  , {"1-9", fun() -> ?assertEqual(16#e3069283, crc32cer:Fun("123456789")) end}
-  , {"a", fun() -> ?assertEqual(16#c1d04330, crc32cer:Fun("a")) end}
-  , {"license", fun() -> ?assertEqual(license_crc(), crc32cer:Fun(license_txt())) end}
-  , {"acc",
-     fun() ->
-         Bytes = license_txt(),
-         Crc = lists:foldl(fun(B, Acc) -> crc32cer:Fun(Acc, [B]) end, 0, Bytes),
-         ?assertEqual(license_crc(), Crc)
-     end}].
+    [
+        {"0", fun() -> ?assertEqual(0, crc32cer:Fun(<<>>)) end},
+        {"1-9", fun() -> ?assertEqual(16#e3069283, crc32cer:Fun("123456789")) end},
+        {"a", fun() -> ?assertEqual(16#c1d04330, crc32cer:Fun("a")) end},
+        {"license", fun() -> ?assertEqual(license_crc(), crc32cer:Fun(license_txt())) end},
+        {"acc", fun() ->
+            Bytes = license_txt(),
+            Crc = lists:foldl(fun(B, Acc) -> crc32cer:Fun(Acc, [B]) end, 0, Bytes),
+            ?assertEqual(license_crc(), Crc)
+        end}
+    ].
 
 %% Test incremental iolist processing
 iolist_nif_test_() ->
-  [iolist_basic(Fun) || Fun <- [nif, nif_d, nif_iolist_d]].
+    [iolist_basic(Fun) || Fun <- [nif, nif_d, nif_iolist_d]].
 
 iolist_basic(Fun) ->
-  [ {"simple_iolist",
-     fun() ->
-         IoList = [<<"hello">>, " ", <<"world">>],
-         Expected = crc32cer:Fun(<<"hello world">>),
-         Actual = crc32cer:Fun(IoList),
-         ?assertEqual(Expected, Actual)
-     end}
-  , {"nested_iolist",
-     fun() ->
-         IoList = [<<"part1">>, [<<"part2">>, " ", <<"part3">>], <<"part4">>],
-         Expected = crc32cer:Fun(<<"part1part2 part3part4">>),
-         Actual = crc32cer:Fun(IoList),
-         ?assertEqual(Expected, Actual)
-     end}
-  , {"mixed_iolist",
-     fun() ->
-         IoList = [<<"binary">>, [<<"nested">>, 32, <<"chars">>], "string"],
-         Expected = crc32cer:Fun(<<"binarynested charsstring">>),
-         Actual = crc32cer:Fun(IoList),
-         ?assertEqual(Expected, Actual)
-     end}
-  , {"empty_iolist",
-     fun() ->
-         IoList = [],
-         Expected = crc32cer:Fun(<<>>),
-         Actual = crc32cer:Fun(IoList),
-         ?assertEqual(Expected, Actual)
-     end}
-  , {"iolist_with_acc",
-     fun() ->
-         IoList = [<<"hello">>, " ", <<"world">>],
-         Expected = crc32cer:Fun(16#12345678, <<"hello world">>),
-         Actual = crc32cer:Fun(16#12345678, IoList),
-         ?assertEqual(Expected, Actual)
-     end}
-  , {"deep_nested_iolist",
-     fun() ->
-         Last = lists:foldl(fun(X, Acc) -> [ X | [Acc]] end, [], lists:seq(1,128)),
-         IoList = [<<"part1">>, [<<"part2">>, " ", <<"part3">>], <<"part4">>, Last],
-         Expected = crc32cer:nif(IoList),
-         Actual = crc32cer:nif_iolist_d(IoList),
-         ?assertEqual(Expected, Actual)
-     end}
-].
+    [
+        {"simple_iolist", fun() ->
+            IoList = [<<"hello">>, " ", <<"world">>],
+            Expected = crc32cer:Fun(<<"hello world">>),
+            Actual = crc32cer:Fun(IoList),
+            ?assertEqual(Expected, Actual)
+        end},
+        {"nested_iolist", fun() ->
+            IoList = [<<"part1">>, [<<"part2">>, " ", <<"part3">>], <<"part4">>],
+            Expected = crc32cer:Fun(<<"part1part2 part3part4">>),
+            Actual = crc32cer:Fun(IoList),
+            ?assertEqual(Expected, Actual)
+        end},
+        {"mixed_iolist", fun() ->
+            IoList = [<<"binary">>, [<<"nested">>, 32, <<"chars">>], "string"],
+            Expected = crc32cer:Fun(<<"binarynested charsstring">>),
+            Actual = crc32cer:Fun(IoList),
+            ?assertEqual(Expected, Actual)
+        end},
+        {"empty_iolist", fun() ->
+            IoList = [],
+            Expected = crc32cer:Fun(<<>>),
+            Actual = crc32cer:Fun(IoList),
+            ?assertEqual(Expected, Actual)
+        end},
+        {"iolist_with_acc", fun() ->
+            IoList = [<<"hello">>, " ", <<"world">>],
+            Expected = crc32cer:Fun(16#12345678, <<"hello world">>),
+            Actual = crc32cer:Fun(16#12345678, IoList),
+            ?assertEqual(Expected, Actual)
+        end},
+        {"deep_nested_iolist", fun() ->
+            Last = lists:foldl(fun(X, Acc) -> [X | [Acc]] end, [], lists:seq(1, 128)),
+            IoList = [<<"part1">>, [<<"part2">>, " ", <<"part3">>], <<"part4">>, Last],
+            Expected = crc32cer:nif(IoList),
+            Actual = crc32cer:nif_iolist_d(IoList),
+            ?assertEqual(Expected, Actual)
+        end}
+    ].
 
 perf_test() ->
     Data = binary:copy(list_to_binary(license_txt()), 400),
-    {Elapsed, ok} = timer:tc(fun() ->
-                                     lists:foreach(fun(_) -> crc32cer:nif(Data) end, lists:seq(1, 1000))
-                             end, millisecond),
+    {Elapsed, ok} = timer:tc(
+        fun() ->
+            lists:foreach(fun(_) -> crc32cer:nif(Data) end, lists:seq(1, 1000))
+        end,
+        millisecond
+    ),
     Arch = erlang:system_info(system_architecture),
     case string:find(Arch, "x86_64") of
-      nomatch ->
-        ?debugFmt("Performance test on non-x86 architecture: ~p ms", [Elapsed]);
-      _ ->
-        ?debugFmt("Performance test on x86 architecture: ~p ms", [Elapsed]),
-        ?assert(Elapsed < 100)
+        nomatch ->
+            ?debugFmt("Performance test on non-x86 architecture: ~p ms", [Elapsed]);
+        _ ->
+            ?debugFmt("Performance test on x86 architecture: ~p ms", [Elapsed]),
+            ?assert(Elapsed < 100)
     end.
 
 %% Test deep iolist to verify performance with deep nesting
@@ -88,21 +87,24 @@ deep_iolist_test() ->
     %% Test various depths to see the limits
     Depths = [1000, 5000, 10000],
 
-    lists:foreach(fun(Depth) ->
-        DeepIoList = create_deep_iolist(Depth),
-        {Time, Result} = timer:tc(fun() -> crc32cer:nif(DeepIoList) end),
+    lists:foreach(
+        fun(Depth) ->
+            DeepIoList = create_deep_iolist(Depth),
+            {Time, Result} = timer:tc(fun() -> crc32cer:nif(DeepIoList) end),
 
-        ?debugFmt("Deep iolist test (~p levels): ~p microseconds~n", [Depth, Time]),
-        ?debugFmt("Result: ~p~n", [Result]),
+            ?debugFmt("Deep iolist test (~p levels): ~p microseconds~n", [Depth, Time]),
+            ?debugFmt("Result: ~p~n", [Result]),
 
-        %% Verify it's not 0 (which would indicate failure)
-        ?assertNotEqual(0, Result)
-    end, Depths),
+            %% Verify it's not 0 (which would indicate failure)
+            ?assertNotEqual(0, Result)
+        end,
+        Depths
+    ),
 
     true.
 
 create_deep_iolist(0) -> [<<"end">>];
-create_deep_iolist(N) -> [<<"level_", (integer_to_binary(N))/binary>>, create_deep_iolist(N-1)].
+create_deep_iolist(N) -> [<<"level_", (integer_to_binary(N))/binary>>, create_deep_iolist(N - 1)].
 
 %% Test badarg cases for nif_iolist_d functions
 nif_iolist_d_badarg_test_() ->
@@ -112,24 +114,43 @@ nif_d_badarg_test_() ->
     badarg_test(nif_d).
 
 badarg_test(Fun) ->
-    [ {"atom", fun() -> ?assertError(badarg, crc32cer:Fun(atom)) end}
-    , {"tuple", fun() -> ?assertError(badarg, crc32cer:Fun({1, 2, 3})) end}
-    , {"pid", fun() -> ?assertError(badarg, crc32cer:Fun(self())) end}
-    , {"ref", fun() -> ?assertError(badarg, crc32cer:Fun(make_ref())) end}
-    , {"port", fun() -> ?assertError(badarg, crc32cer:Fun(hd(erlang:ports()))) end}
-    , {"map", fun() -> ?assertError(badarg, crc32cer:Fun(#{key => value})) end}
-    , {"invalid_nested", fun() -> ?assertError(badarg, crc32cer:Fun([1, {2, 3}, 4])) end}
-    , {"invalid_atom_in_list", fun() -> ?assertError(badarg, crc32cer:Fun([<<"hello">>, world, <<"world">>])) end}
-    , {"invalid_pid_in_list", fun() -> ?assertError(badarg, crc32cer:Fun([<<"hello">>, self(), <<"world">>])) end}
-    , {"invalid_ref_in_list", fun() -> ?assertError(badarg, crc32cer:Fun([<<"hello">>, make_ref(), <<"world">>])) end}
-    , {"invalid_port_in_list", fun() -> ?assertError(badarg, crc32cer:Fun([<<"hello">>, hd(erlang:ports()), <<"world">>])) end}
-    , {"invalid_map_in_list", fun() -> ?assertError(badarg, crc32cer:Fun([<<"hello">>, #{key => value}, <<"world">>])) end}
-    , {"invalid_tuple_in_list", fun() -> ?assertError(badarg, crc32cer:Fun([<<"hello">>, {1, 2}, <<"world">>])) end}
-    , {"deep_invalid_nested", fun() -> ?assertError(badarg, crc32cer:Fun([<<"hello">>, [<<"nested">>, {invalid, data}], <<"world">>])) end}
-    , {"mixed_invalid_types", fun() -> ?assertError(badarg, crc32cer:Fun([<<"hello">>, atom, 123, {tuple}, <<"world">>])) end}
-    , {"non-byte number > 255", fun() -> ?assertError(badarg, crc32cer:Fun([256])) end}
-    , {"non-byte numbers < 0", fun() -> ?assertError(badarg, crc32cer:Fun([-1])) end}
-    , {"non-byte numbers float", fun() -> ?assertError(badarg, crc32cer:Fun([1.0])) end}
+    [
+        {"atom", fun() -> ?assertError(badarg, crc32cer:Fun(atom)) end},
+        {"tuple", fun() -> ?assertError(badarg, crc32cer:Fun({1, 2, 3})) end},
+        {"pid", fun() -> ?assertError(badarg, crc32cer:Fun(self())) end},
+        {"ref", fun() -> ?assertError(badarg, crc32cer:Fun(make_ref())) end},
+        {"port", fun() -> ?assertError(badarg, crc32cer:Fun(hd(erlang:ports()))) end},
+        {"map", fun() -> ?assertError(badarg, crc32cer:Fun(#{key => value})) end},
+        {"invalid_nested", fun() -> ?assertError(badarg, crc32cer:Fun([1, {2, 3}, 4])) end},
+        {"invalid_atom_in_list", fun() ->
+            ?assertError(badarg, crc32cer:Fun([<<"hello">>, world, <<"world">>]))
+        end},
+        {"invalid_pid_in_list", fun() ->
+            ?assertError(badarg, crc32cer:Fun([<<"hello">>, self(), <<"world">>]))
+        end},
+        {"invalid_ref_in_list", fun() ->
+            ?assertError(badarg, crc32cer:Fun([<<"hello">>, make_ref(), <<"world">>]))
+        end},
+        {"invalid_port_in_list", fun() ->
+            ?assertError(badarg, crc32cer:Fun([<<"hello">>, hd(erlang:ports()), <<"world">>]))
+        end},
+        {"invalid_map_in_list", fun() ->
+            ?assertError(badarg, crc32cer:Fun([<<"hello">>, #{key => value}, <<"world">>]))
+        end},
+        {"invalid_tuple_in_list", fun() ->
+            ?assertError(badarg, crc32cer:Fun([<<"hello">>, {1, 2}, <<"world">>]))
+        end},
+        {"deep_invalid_nested", fun() ->
+            ?assertError(
+                badarg, crc32cer:Fun([<<"hello">>, [<<"nested">>, {invalid, data}], <<"world">>])
+            )
+        end},
+        {"mixed_invalid_types", fun() ->
+            ?assertError(badarg, crc32cer:Fun([<<"hello">>, atom, 123, {tuple}, <<"world">>]))
+        end},
+        {"non-byte number > 255", fun() -> ?assertError(badarg, crc32cer:Fun([256])) end},
+        {"non-byte numbers < 0", fun() -> ?assertError(badarg, crc32cer:Fun([-1])) end},
+        {"non-byte numbers float", fun() -> ?assertError(badarg, crc32cer:Fun([1.0])) end}
     ].
 
 %% Test that valid inputs still work for nif_iolist_d functions
@@ -139,36 +160,44 @@ nif_iolist_d_valid_test_() ->
 nif_d_valid_test_() ->
     valid_test(nif_d).
 
-
 valid_test(Fun) ->
-    [ {"binary", fun() -> ?assertEqual(16#c1d04330, crc32cer:Fun(<<"a">>)) end}
-    , {"list", fun() -> ?assertEqual(16#e3069283, crc32cer:Fun("123456789")) end}
-    , {"iolist", fun() -> ?assertEqual(16#e3069283, crc32cer:Fun([<<"123">>, "456", <<"789">>])) end}
-    , {"empty_list", fun() -> ?assertEqual(0, crc32cer:Fun([])) end}
-    , {"nested_list", fun() -> ?assertEqual(16#e3069283, crc32cer:Fun([<<"123">>, [<<"456">>, <<"789">>]])) end}
-    , {"numbers_in_list", fun() -> ?assertEqual(16#e3069283, crc32cer:Fun([49, 50, 51, 52, 53, 54, 55, 56, 57])) end}
-    , {"mixed_numbers_and_binaries", fun() -> ?assertEqual(3743053745, crc32cer:Fun([49, <<"234">>, 56, 57])) end}
+    [
+        {"binary", fun() -> ?assertEqual(16#c1d04330, crc32cer:Fun(<<"a">>)) end},
+        {"list", fun() -> ?assertEqual(16#e3069283, crc32cer:Fun("123456789")) end},
+        {"iolist", fun() ->
+            ?assertEqual(16#e3069283, crc32cer:Fun([<<"123">>, "456", <<"789">>]))
+        end},
+        {"empty_list", fun() -> ?assertEqual(0, crc32cer:Fun([])) end},
+        {"nested_list", fun() ->
+            ?assertEqual(16#e3069283, crc32cer:Fun([<<"123">>, [<<"456">>, <<"789">>]]))
+        end},
+        {"numbers_in_list", fun() ->
+            ?assertEqual(16#e3069283, crc32cer:Fun([49, 50, 51, 52, 53, 54, 55, 56, 57]))
+        end},
+        {"mixed_numbers_and_binaries", fun() ->
+            ?assertEqual(3743053745, crc32cer:Fun([49, <<"234">>, 56, 57]))
+        end}
     ].
 
 license_crc() ->
-  16#7dcde113.
+    16#7dcde113.
 
 license_txt() ->
-"  This software is provided 'as-is', without any express or implied\n"
-"  warranty.  In no event will the author be held liable for any damages\n"
-"  arising from the use of this software.\n"
-"\n"
-"  Permission is granted to anyone to use this software for any purpose,\n"
-"  including commercial applications, and to alter it and redistribute it\n"
-"  freely, subject to the following restrictions:\n"
-"\n"
-"  1. The origin of this software must not be misrepresented; you must not\n"
-"     claim that you wrote the original software. If you use this software\n"
-"     in a product, an acknowledgment in the product documentation would be\n"
-"     appreciated but is not required.\n"
-"  2. Altered source versions must be plainly marked as such, and must not be\n"
-"     misrepresented as being the original software.\n"
-"  3. This notice may not be removed or altered from any source distribution.".
+    "  This software is provided 'as-is', without any express or implied\n"
+    "  warranty.  In no event will the author be held liable for any damages\n"
+    "  arising from the use of this software.\n"
+    "\n"
+    "  Permission is granted to anyone to use this software for any purpose,\n"
+    "  including commercial applications, and to alter it and redistribute it\n"
+    "  freely, subject to the following restrictions:\n"
+    "\n"
+    "  1. The origin of this software must not be misrepresented; you must not\n"
+    "     claim that you wrote the original software. If you use this software\n"
+    "     in a product, an acknowledgment in the product documentation would be\n"
+    "     appreciated but is not required.\n"
+    "  2. Altered source versions must be plainly marked as such, and must not be\n"
+    "     misrepresented as being the original software.\n"
+    "  3. This notice may not be removed or altered from any source distribution.".
 
 %% =============================================================================
 %% Performance Tests
@@ -198,7 +227,6 @@ assert_not_worse(StandardTime, OptimizedTime) ->
     ?debugFmt("Speedup: ~.2fx", [Speedup]),
     %% Assert not getting worse
     ?assert(Speedup > 0.9, io_lib:format("performance insufficient: ~.2fx", [Speedup])).
-
 
 %% Performance test for very large binary batches
 performance_200KB_x_10_chunks_test_() ->
@@ -263,13 +291,21 @@ performance_correctness() ->
         {[binary:copy(<<"c">>, 1000) || _ <- lists:seq(1, 10)], "Multiple chunks"}
     ],
 
-    lists:foreach(fun({TestData, Name}) ->
-        CrcStandard = crc32cer:nif_d(TestData),
-        CrcOptimized = crc32cer:nif_iolist_d(TestData),
-        ?assertEqual(CrcStandard, CrcOptimized,
-                    io_lib:format("~s: results don't match (~p != ~p)",
-                                 [Name, CrcStandard, CrcOptimized]))
-    end, TestCases),
+    lists:foreach(
+        fun({TestData, Name}) ->
+            CrcStandard = crc32cer:nif_d(TestData),
+            CrcOptimized = crc32cer:nif_iolist_d(TestData),
+            ?assertEqual(
+                CrcStandard,
+                CrcOptimized,
+                io_lib:format(
+                    "~s: results don't match (~p != ~p)",
+                    [Name, CrcStandard, CrcOptimized]
+                )
+            )
+        end,
+        TestCases
+    ),
 
     ?debugFmt("All correctness tests passed", []).
 
@@ -341,25 +377,39 @@ performance_small_chunks_correctness() ->
         {[binary:copy(<<"d">>, 1) || _ <- lists:seq(1, 1000)], "Many single-byte chunks"}
     ],
 
-    lists:foreach(fun({TestData, Name}) ->
-        CrcStandard = crc32cer:nif_d(TestData),
-        CrcOptimized = crc32cer:nif_iolist_d(TestData),
-        ?assertEqual(CrcStandard, CrcOptimized,
-                    io_lib:format("~s: results don't match (~p != ~p)",
-                                 [Name, CrcStandard, CrcOptimized]))
-    end, TestCases),
+    lists:foreach(
+        fun({TestData, Name}) ->
+            CrcStandard = crc32cer:nif_d(TestData),
+            CrcOptimized = crc32cer:nif_iolist_d(TestData),
+            ?assertEqual(
+                CrcStandard,
+                CrcOptimized,
+                io_lib:format(
+                    "~s: results don't match (~p != ~p)",
+                    [Name, CrcStandard, CrcOptimized]
+                )
+            )
+        end,
+        TestCases
+    ),
 
     ?debugFmt("All small chunks correctness tests passed", []).
 
 %% Helper function to create mixed small chunks iolist
-create_mixed_small_chunks_iolist(0, _ChunkSize) -> [];
+create_mixed_small_chunks_iolist(0, _ChunkSize) ->
+    [];
 create_mixed_small_chunks_iolist(N, ChunkSize) ->
-    [binary:copy(<<"x">>, ChunkSize),
-     [binary:copy(<<"y">>, ChunkSize div 2) || _ <- lists:seq(1, 5)],
-     create_mixed_small_chunks_iolist(N-1, ChunkSize)].
+    [
+        binary:copy(<<"x">>, ChunkSize),
+        [binary:copy(<<"y">>, ChunkSize div 2) || _ <- lists:seq(1, 5)],
+        create_mixed_small_chunks_iolist(N - 1, ChunkSize)
+    ].
 
 %% Helper function to create deep iolist with large data
-create_deep_large_iolist(0, _ChunkSize) -> [<<"end">>];
+create_deep_large_iolist(0, _ChunkSize) ->
+    [<<"end">>];
 create_deep_large_iolist(N, ChunkSize) ->
-    [binary:copy(<<"c">>, ChunkSize),
-     create_deep_large_iolist(N-1, ChunkSize)].
+    [
+        binary:copy(<<"c">>, ChunkSize),
+        create_deep_large_iolist(N - 1, ChunkSize)
+    ].

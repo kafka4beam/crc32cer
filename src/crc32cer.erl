@@ -42,22 +42,23 @@
 %% @see <a href="https://tools.ietf.org/html/rfc3720#section-12.1">RFC 3720 - CRC32C</a>
 -module(crc32cer).
 
--export([nif/1,
-         nif/2,
-         nif_d/1,
-         nif_d/2,
-         nif_iolist/1,
-         nif_iolist/2,
-         nif_iolist_d/1,
-         nif_iolist_d/2
-        ]).
+-export([
+    nif/1,
+    nif/2,
+    nif_d/1,
+    nif_d/2,
+    nif_iolist/1,
+    nif_iolist/2,
+    nif_iolist_d/1,
+    nif_iolist_d/2
+]).
 
 -on_load(init/0).
 
 -spec init() -> ok.
 init() ->
-  _ = erlang:load_nif(so_path(), 0),
-  ok.
+    _ = erlang:load_nif(so_path(), 0),
+    ok.
 
 %% @doc Calculate CRC32C checksum of iodata with initial CRC of 0.
 %%
@@ -82,7 +83,7 @@ init() ->
 %% Returns the CRC32C checksum as a non-negative integer
 -spec nif(iodata()) -> non_neg_integer().
 nif(IoData) ->
-  nif(0, IoData).
+    nif(0, IoData).
 
 %% @doc Calculate CRC32C checksum of iodata with custom initial CRC.
 %%
@@ -106,7 +107,7 @@ nif(IoData) ->
 %% Returns the CRC32C checksum as a non-negative integer
 -spec nif(integer(), iodata()) -> non_neg_integer().
 nif(Acc, IoData) ->
-  nif_d(Acc, IoData).
+    nif_d(Acc, IoData).
 
 %% @doc Calculate CRC32C checksum of iodata with initial CRC of 0 (dirty scheduler job).
 %%
@@ -129,7 +130,7 @@ nif(Acc, IoData) ->
 %% Returns the CRC32C checksum as a non-negative integer
 -spec nif_d(iodata()) -> non_neg_integer().
 nif_d(IoData) ->
-  nif_d(0, IoData).
+    nif_d(0, IoData).
 
 %% @doc Calculate CRC32C checksum of iodata with custom initial CRC (dirty scheduler job).
 %%
@@ -153,7 +154,7 @@ nif_d(IoData) ->
 %% Returns the CRC32C checksum as a non-negative integer
 -spec nif_d(integer(), iodata()) -> non_neg_integer().
 nif_d(_Acc, _IoData) ->
-  erlang:nif_error({crc32cer_nif_not_loaded, so_path()}).
+    erlang:nif_error({crc32cer_nif_not_loaded, so_path()}).
 
 %% @doc Calculate CRC32C checksum of iodata with initial CRC of 0 (iolist optimized).
 %%
@@ -211,7 +212,7 @@ nif_iolist(IoData) ->
 %% @returns The CRC32C checksum as a non-negative integer
 -spec nif_iolist(integer(), iodata()) -> non_neg_integer().
 nif_iolist(_Acc, _IoData) ->
-  erlang:nif_error({crc32cer_nif_not_loaded, so_path()}).
+    erlang:nif_error({crc32cer_nif_not_loaded, so_path()}).
 
 %% @doc Calculate CRC32C checksum of iodata with initial CRC of 0 (iolist optimized, dirty scheduler).
 %%
@@ -268,28 +269,32 @@ nif_iolist_d(IoData) ->
 %% @returns The CRC32C checksum as a non-negative integer
 -spec nif_iolist_d(integer(), iodata()) -> non_neg_integer().
 nif_iolist_d(_Acc, _IoData) ->
-  erlang:nif_error({crc32cer_nif_not_loaded, so_path()}).
+    erlang:nif_error({crc32cer_nif_not_loaded, so_path()}).
 
 -spec so_path() -> string().
 so_path() ->
-  filename:join([get_nif_bin_dir(), "libcrc32cer_nif"]).
+    filename:join([get_nif_bin_dir(), "libcrc32cer_nif"]).
 
 get_nif_bin_dir() ->
-  {ok, Cwd} = file:get_cwd(),
-  get_nif_bin_dir(
-    [ code:priv_dir(crc32cer)
-    , filename:join([Cwd, "..", "priv"])
-    , filename:join(Cwd, "priv")
-    , os:getenv("NIF_BIN_DIR")
-    ]).
+    {ok, Cwd} = file:get_cwd(),
+    get_nif_bin_dir(
+        [
+            code:priv_dir(crc32cer),
+            filename:join([Cwd, "..", "priv"]),
+            filename:join(Cwd, "priv"),
+            os:getenv("NIF_BIN_DIR")
+        ]
+    ).
 
-get_nif_bin_dir([]) -> erlang:error(crc32cer_nif_not_found);
-get_nif_bin_dir([false | Rest]) -> get_nif_bin_dir(Rest);
+get_nif_bin_dir([]) ->
+    erlang:error(crc32cer_nif_not_found);
+get_nif_bin_dir([false | Rest]) ->
+    get_nif_bin_dir(Rest);
 get_nif_bin_dir([Dir | Rest]) ->
-  case filelib:wildcard(filename:join([Dir, "libcrc32cer_nif*"])) of
-    [] -> get_nif_bin_dir(Rest);
-    [_ | _] -> Dir
-  end.
+    case filelib:wildcard(filename:join([Dir, "libcrc32cer_nif*"])) of
+        [] -> get_nif_bin_dir(Rest);
+        [_ | _] -> Dir
+    end.
 
 %%%_* Emacs ====================================================================
 %%% Local Variables:
