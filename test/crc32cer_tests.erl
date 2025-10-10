@@ -166,11 +166,11 @@ license_txt() ->
 %% Performance Tests
 %% =============================================================================
 
-run_perf(IoData, Repeats) ->
+run_perf(IoData) ->
     %% Warmup
     CRC = crc32cer:nif_d(IoData),
     CRC = crc32cer:nif_iolist_d(IoData),
-    L = lists:seq(1, Repeats),
+    L = lists:seq(1, 100),
 
     %% Test standard approach
     {StandardTime, _StandardResult} = timer:tc(fun() ->
@@ -193,7 +193,7 @@ performance_200KB_x_10_chunks() ->
     %% Generate large binary chunks
     LargeChunks = [binary:copy(<<"c">>, 200 * ?KB) || _ <- lists:seq(1, 10)],
 
-    {StandardTime, OptimizedTime} = run_perf(LargeChunks, 10),
+    {StandardTime, OptimizedTime} = run_perf(LargeChunks),
 
     Speedup = StandardTime / OptimizedTime,
     ?debugFmt("Standard approach: ~p microseconds", [StandardTime]),
@@ -214,7 +214,7 @@ performance_200KB_x_50_chunks() ->
     %% Create very large iolist
     VeryLargeIoList = [binary:copy(<<"v">>, 200 * ?KB) || _ <- lists:seq(1, 50)],
 
-    {StandardTime, OptimizedTime} = run_perf(VeryLargeIoList, 10),
+    {StandardTime, OptimizedTime} = run_perf(VeryLargeIoList),
 
     Speedup = StandardTime / OptimizedTime,
     ?debugFmt("Standard approach: ~p microseconds", [StandardTime]),
@@ -234,7 +234,7 @@ performance_deep_nesting() ->
     %% Create deeply nested iolist with large data
     DeepLargeIoList = create_deep_large_iolist(128, 10 * ?KB),
 
-    {StandardTime, OptimizedTime} = run_perf(DeepLargeIoList, 10),
+    {StandardTime, OptimizedTime} = run_perf(DeepLargeIoList),
 
     Speedup = StandardTime / OptimizedTime,
     ?debugFmt("Standard approach: ~p microseconds", [StandardTime]),
@@ -285,10 +285,10 @@ performance_small_chunks() ->
     %% Generate many small binary chunks (1KB each)
     SmallChunks = [binary:copy(<<"c">>, 1 * ?KB) || _ <- lists:seq(1, 1000)],
 
-    {StandardTime, OptimizedTime} = run_perf(SmallChunks, 10),
+    {StandardTime, OptimizedTime} = run_perf(SmallChunks),
 
     Speedup = StandardTime / OptimizedTime,
-    Threshold = get_assertion_threshold(),
+    Threshold = 0.5,
     ?debugFmt("Standard approach: ~p microseconds", [StandardTime]),
     ?debugFmt("Optimized approach: ~p microseconds", [OptimizedTime]),
     ?debugFmt("Speedup: ~.2fx", [Speedup]),
@@ -306,10 +306,10 @@ performance_tiny_chunks() ->
     %% Generate many tiny binary chunks (63 bytes each)
     TinyChunks = [binary:copy(<<"c">>, 63) || _ <- lists:seq(1, 5000)],
 
-    {StandardTime, OptimizedTime} = run_perf(TinyChunks, 10),
+    {StandardTime, OptimizedTime} = run_perf(TinyChunks),
 
     Speedup = StandardTime / OptimizedTime,
-    Threshold = get_assertion_threshold(),
+    Threshold = 0.5,
     ?debugFmt("Standard approach: ~p microseconds", [StandardTime]),
     ?debugFmt("Optimized approach: ~p microseconds", [OptimizedTime]),
     ?debugFmt("Speedup: ~.2fx", [Speedup]),
@@ -328,10 +328,10 @@ performance_mixed_small_chunks() ->
     MixedSmallChunks = create_mixed_small_chunks_iolist(100, 256),
 
     %% Test standard approach
-    {StandardTime, OptimizedTime} = run_perf(MixedSmallChunks, 10),
+    {StandardTime, OptimizedTime} = run_perf(MixedSmallChunks),
 
     Speedup = StandardTime / OptimizedTime,
-    Threshold = get_assertion_threshold(),
+    Threshold = 0.5,
     ?debugFmt("Standard approach: ~p microseconds", [StandardTime]),
     ?debugFmt("Optimized approach: ~p microseconds", [OptimizedTime]),
     ?debugFmt("Speedup: ~.2fx", [Speedup]),
@@ -369,13 +369,6 @@ performance_small_chunks_correctness() ->
 is_arm_architecture() ->
     Arch = erlang:system_info(system_architecture),
     string:find(Arch, "arm") =/= nomatch orelse string:find(Arch, "aarch") =/= nomatch.
-
-%% Helper function to get appropriate assertion threshold based on architecture
-get_assertion_threshold() ->
-    case is_arm_architecture() of
-        true -> 0.4;
-        false -> 0.6
-    end.
 
 %% Helper function to create mixed small chunks iolist
 create_mixed_small_chunks_iolist(0, _ChunkSize) -> [];
