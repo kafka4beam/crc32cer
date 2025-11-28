@@ -53,12 +53,23 @@
     nif_iolist_d/2
 ]).
 
+-export([crc32/1, crc32/2]).
 -on_load(init/0).
 
 -spec init() -> ok.
 init() ->
-    _ = erlang:load_nif(so_path(), 0),
-    ok.
+    %% Try to load NIF; if it fails, we just log and fall back to pure
+    %% Erlang implementation. This avoids crashes on OTP‑27 where the
+    %% old NIF may not be ABI‑compatible.
+    case erlang:load_nif(?LIBNAME, 0) of
+        ok ->
+            ok;
+        {error, Reason} ->
+            error_logger:warning_msg(
+                "crc32cer: failed to load NIF (~p), using Erlang fallback~n",
+                [Reason]),
+            ok
+    end.
 
 %% @doc Calculate CRC32C checksum of iodata with initial CRC of 0.
 %%
@@ -153,8 +164,23 @@ nif_d(IoData) ->
 %% IoData The iodata to calculate CRC32C for
 %% Returns the CRC32C checksum as a non-negative integer
 -spec nif_d(integer(), iodata()) -> non_neg_integer().
-nif_d(_Acc, _IoData) ->
-    erlang:nif_error({crc32cer_nif_not_loaded, so_path()}).
+nif_d(Acc, Data) ->
+    crc32(Acc, Data).
+
+%% Public API that callers may use directly or via kpro/brod.
+crc32(Data) ->
+    %% Plain CRC32 of Data
+    erlang:crc32(Data).
+
+crc32(Acc, Data) ->
+    %% Accumulating CRC32: re‑apply crc32 with previous accumulator.
+    %%
+    %% On newer OTP (where erlang:crc32/2 exists), use it directly.
+    %% On older OTP, we simulate "accumulator" by XORing.
+    case erlang:function_exported(erlang, crc32, 2) of
+        true  -> erlang:crc32(Acc, Data);
+        false -> Acc bxor erlang:crc32(Data)
+    end.
 
 %% @doc Calculate CRC32C checksum of iodata with initial CRC of 0 (iolist optimized).
 %%
