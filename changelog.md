@@ -1,3 +1,7 @@
+# 1.1.1
+
+- Add FreeBSD to build system list in rebar.config.
+
 # 1.1.0
 
 - Add `nif_iolist` and `nif_iolist_d` APIs for iolist with large binary chunks.
