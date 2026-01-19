@@ -1,3 +1,7 @@
+# 1.1.2
+
+- Fix link issue on aarch64: "undefined symbol: __cxa_guard_release"
+
 # 1.1.1
 
 - Add FreeBSD to build system list in rebar.config.
