@@ -54,7 +54,7 @@ set_property(TARGET crc32c PROPERTY IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/extern
 if (CMAKE_SYSTEM_NAME MATCHES Darwin)
   target_link_libraries(crc32cer_nif PRIVATE crc32c c++ "-Wl,-undefined,dynamic_lookup")
 else()
- target_link_libraries(crc32cer_nif crc32c)
+  target_link_libraries(crc32cer_nif crc32c stdc++)
 endif()
 
 install(TARGETS crc32cer_nif LIBRARY DESTINATION ${PROJECT_SOURCE_DIR}/priv/)
