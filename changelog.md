@@ -1,3 +1,7 @@
+# 1.1.3
+
+- Use `crc32c` as a submodule.
+
 # 1.1.2
 
 - Fix link issue on aarch64: "undefined symbol: __cxa_guard_release"
