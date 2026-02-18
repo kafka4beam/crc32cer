@@ -32,9 +32,10 @@ env.mk
 rebar.lock
 .erlang.mk
 _build/
+_checkouts/
 erlang.mk
 TEST-file*.xml
 .tool-versions
 c_build
 *.dump
-TEST-crc32cer_tests.xml
+TEST-crc32cer_*.xml

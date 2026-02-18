@@ -15,6 +15,11 @@
         "src",
         "Makefile",
         "CMakeLists.txt",
-        "crc32c_cmake.patch"
+        "external"
+    ]},
+    {exclude_paths, [
+        "external/crc32c/.git",
+        "external/crc32c/.github",
+        "external/crc32c/third_party"
     ]}
 ]}.

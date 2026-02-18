@@ -29,26 +29,16 @@ target_include_directories(crc32cer_nif PRIVATE ${Erlang_OTP_ROOT_DIR}/usr/inclu
 set(CMAKE_CXX_EXTENSIONS ON)
 set_property(GLOBAL  PROPERTY CXX_STANDARD 11)
 
-include(ExternalProject)
-ExternalProject_Add(google-crc32c
-         GIT_REPOSITORY "https://github.com/google/crc32c.git"
-         GIT_TAG "1.1.2"
-         GIT_SHALLOW 1
-         GIT_SUBMODULES ""
-         PREFIX "${CMAKE_BINARY_DIR}/external"
-         SOURCE_DIR "${CMAKE_BINARY_DIR}/external/crc32c"
-         CMAKE_ARGS -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCRC32C_INSTALL=ON -DCRC32C_BUILD_TESTS=OFF -DCRC32C_BUILD_BENCHMARKS=OFF -DCRC32C_USE_GLOG=0 -DCMAKE_C_FLAGS=-fPIC -DCMAKE_CXX_FLAGS=-fPIC
-         BUILD_COMMAND ${CMAKE_COMMAND} --build .
-         PATCH_COMMAND patch -N -p1 < ${PROJECT_SOURCE_DIR}/crc32c_cmake.patch || true
-         INSTALL_COMMAND ""
-         )
+set(CRC32C_BUILD_TESTS OFF)
+set(CRC32C_BUILD_BENCHMARKS OFF)
+set(CRC32C_USE_GLOG OFF)
+add_subdirectory(external/crc32c)
 
 # Set appropriate include and link directories
 include_directories(${CMAKE_BINARY_DIR}/external/crc32c/include)
-add_library(crc32c SHARED IMPORTED)
 
 # Specify the dependency on the external library
-add_dependencies(crc32cer_nif google-crc32c)
+add_dependencies(crc32cer_nif crc32c)
 set_property(TARGET crc32c PROPERTY IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/external/src/google-crc32c-build/libcrc32c.a)
 
 if (CMAKE_SYSTEM_NAME MATCHES Darwin)
