@@ -39,6 +39,9 @@ include_directories(${CMAKE_BINARY_DIR}/external/crc32c/include)
 
 # Specify the dependency on the external library
 add_dependencies(crc32cer_nif crc32c)
+set_target_properties(crc32c PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(crc32c_arm64 PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(crc32c_sse42 PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_property(TARGET crc32c PROPERTY IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/external/src/google-crc32c-build/libcrc32c.a)
 
 if (CMAKE_SYSTEM_NAME MATCHES Darwin)
