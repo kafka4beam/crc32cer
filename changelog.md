@@ -1,3 +1,7 @@
+# 1.1.4
+
+- Build vendored crc32c with -fPIC.
+
 # 1.1.3
 
 - Use `crc32c` as a submodule.
