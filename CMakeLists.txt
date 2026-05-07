@@ -32,6 +32,9 @@ set_property(GLOBAL  PROPERTY CXX_STANDARD 11)
 set(CRC32C_BUILD_TESTS OFF)
 set(CRC32C_BUILD_BENCHMARKS OFF)
 set(CRC32C_USE_GLOG OFF)
+# The vendored google/crc32c is built as a static archive but linked into
+# the SHARED crc32cer_nif, so its objects must be position-independent.
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_subdirectory(external/crc32c)
 
 # Set appropriate include and link directories
